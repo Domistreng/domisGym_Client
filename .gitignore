@@ -3,6 +3,9 @@
 # dependencies
 node_modules/
 
+# pastbuilds
+pastBuilds/
+
 # Expo
 .expo/
 dist/

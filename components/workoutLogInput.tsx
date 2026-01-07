@@ -3,18 +3,21 @@ import React, { useContext, useEffect, useState } from 'react';
 import {
     Keyboard,
     KeyboardAvoidingView,
+    Modal,
     Platform,
+    Pressable,
     SafeAreaView,
     ScrollView,
     Text,
     TextInput,
     TouchableOpacity,
     TouchableWithoutFeedback,
-    View,
+    View
 } from 'react-native';
 import DropDownPicker from 'react-native-dropdown-picker';
 import { styles } from '../app/domisStyles';
 import { UserContext } from '../app/userContext';
+import InputRecentHistory from '../components/inputRecentHistory';
 
 
 
@@ -40,6 +43,7 @@ interface WorkoutLog {
   RepsSet1: number | null;
   RepsSet2: number | null;
   RepsSet3: number | null;
+  DateTime: string | null;
 }
 //#endregion
 
@@ -106,6 +110,8 @@ const WorkoutLoginInput: React.FC = () => {
     //#endregion
 
     //#region functions (related with API)
+    
+
     const handleSubmit = () => {
         if (!value) return alert('Please select a workout');
         if (!activeUser1) return alert('User not logged in');
@@ -204,6 +210,14 @@ const WorkoutLoginInput: React.FC = () => {
     //#endregion
     
     //#region functions (non-API)
+
+    const reloadUserLogs = () => {
+        fetchLatestLogForUser(activeUser1?.UserID, value, setLatestLogUser1);
+        if (activeUser2) {
+            fetchLatestLogForUser(activeUser2.UserID, value, setLatestLogUser2);
+        }
+    }
+
     const parseNumberOrNull = (str: string) => {
         if (!str) return null;
         const n = Number(str.trim());
@@ -278,10 +292,71 @@ const WorkoutLoginInput: React.FC = () => {
     const renderLatestLog = (log: WorkoutLog | null, username: string | undefined) => {
         if (!log || !username) return null;
         return (
-            <View style={{ marginTop: 15, padding: 10, backgroundColor: '#eee', borderRadius: 6 }}>
-                <Text style={{ fontWeight: '700', fontSize: 18, marginBottom: 6 }}>{username}: {log.WorkoutName}</Text>
-                <Text>Reps: {log.RepsSet1 ?? '-'}, {log.RepsSet2 ?? '-'}, {log.RepsSet3 ?? '-'}</Text>
-                <Text>Weight (lbs): {log.WeightSet1 ?? '-'}, {log.WeightSet2 ?? '-'}, {log.WeightSet3 ?? '-'}</Text>
+            <View>
+                <Pressable onPress={handlePopupPress}>
+                    <View style={{ marginTop: 15, padding: 10, backgroundColor: '#eee', borderRadius: 6 }}>
+                        <Text style={{ fontWeight: '700', fontSize: 18, marginBottom: 6 }}>{username}: {log.WorkoutName}</Text>
+                        <Text>Reps: {log.RepsSet1 ?? '-'}, {log.RepsSet2 ?? '-'}, {log.RepsSet3 ?? '-'}</Text>
+                        <Text>Weight (lbs): {log.WeightSet1 ?? '-'}, {log.WeightSet2 ?? '-'}, {log.WeightSet3 ?? '-'}</Text>
+                    </View>
+                </Pressable>
+
+                <Modal
+                    visible = {visiblePopup}
+                    transparent
+                    animationType="fade"
+                    onRequestClose={() => setVisiblePopup(false)}
+                >
+                    <View
+                        style={{
+                        flex: 1,
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        backgroundColor: 'rgba(0,0,0,0.4)', // dim background
+                        }}
+                    >
+                        <View
+                            style={{
+                                backgroundColor: '#fff',
+                                padding: 20,
+                                borderRadius: 10,
+                                maxHeight: '70%',
+                                minWidth: 300,
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                
+                            }}
+                        >
+                            <Text>Details: {log.RepsSet1}</Text>
+                            <Text>Date: {log.DateTime}</Text>
+                            <Pressable
+                                style={{
+                                    marginTop: 15,
+                                    paddingVertical: 8,
+                                    paddingHorizontal: 20,
+                                    backgroundColor: '#4a90e2',
+                                    borderRadius: 6,
+                                }}
+                                onPress={() => setVisiblePopup(false)}
+                            >
+                                <Text style={{ color: '#fff' }}>Close</Text>
+                            </Pressable>
+
+                            <Pressable
+                                style={{
+                                    marginTop: 15,
+                                    paddingVertical: 8,
+                                    paddingHorizontal: 20,
+                                    backgroundColor: '#930633ff',
+                                    borderRadius: 6,
+                                }}
+                                onPress={() => deleteWorkout(log.UserID, log.DateTime, log.LogID)}
+                            >
+                                <Text style={{ color: '#fff' }}>Delete Log</Text>
+                            </Pressable>
+                        </View>
+                    </View>
+                </Modal>
             </View>
         );
     };
@@ -326,8 +401,8 @@ const WorkoutLoginInput: React.FC = () => {
                         </TouchableOpacity>
 
                         {/* Latest logs display */}
-                        {renderLatestLog(latestLogUser1, activeUser1?.Username)}
-                        {activeUser2 && renderLatestLog(latestLogUser2, activeUser2?.Username)}
+                        <InputRecentHistory log={latestLogUser1} username={activeUser1?.Username} reloadFun={reloadUserLogs}/>
+                        {activeUser2 && <InputRecentHistory log={latestLogUser2} username={activeUser2?.Username} reloadFun={reloadUserLogs}/>}
                     </ScrollView>
                 </KeyboardAvoidingView>
             </SafeAreaView>
