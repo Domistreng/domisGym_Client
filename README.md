@@ -1,50 +1,41 @@
-# Welcome to your Expo app 👋
+# Domis Gym
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Domis Gym is a React Native Expo app for logging workouts to a cloud SQL database, supporting both single users and collaborative multi-user mentoring sessions.[web:28]
 
-## Get started
+## Overview
 
-1. Install dependencies
+Domis Gym helps users track workouts in real time and securely stores all data in a cloud-hosted SQL database for long-term progress tracking.[web:37] The app is built with **Expo** and React Native, making it easy to run on both iOS and Android devices from a single codebase.[web:11][web:14]
 
-   ```bash
-   npm install
-   ```
+## Features
 
-2. Start the app
+- Workout logging: Capture exercises, sets, reps, weights, notes, and timestamps for each workout session.[web:28]  
+- Cloud SQL storage: Persist all workout data in a remote SQL database so data is safe across reinstalls and devices.[web:33]  
+- Multi-user support: Allow multiple users to be logged in simultaneously for mentoring, coaching, or co-op workouts in the same environment.[web:30]  
+- Single-user mode: Use the app as a personal workout tracker with your own account and private history.[web:7]  
+- Cross-platform: Run the same codebase on iOS and Android using Expo tooling and workflows.[web:11]  
 
-   ```bash
-   npx expo start
-   ```
+## Tech Stack
 
-In the output, you'll find options to open the app in a
+- **Frontend**: React Native with Expo for building and running the mobile app.[web:11][web:14]  
+- Backend API: Node.js or similar REST/GraphQL service to communicate between the app and the database.[web:10]  
+- Database: Cloud-hosted SQL database (e.g., PostgreSQL, MySQL, or similar) for relational data modeling of users, workouts, and sessions.[web:33]  
+- Authentication: Token-based authentication (such as JWT) to manage multiple logged-in users securely.[web:10]  
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## Getting Started
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+Clone the repository and install dependencies in your terminal.[web:28]  
 
-## Get a fresh project
+git clone https://github.com/your-username/domis-gym.git  
+cd domis-gym  
+npm install  
+# or  
+yarn install  
+npx expo start  
 
-When you're ready, run:
+Open the Expo Go app on your device and scan the QR code to run Domis Gym.[web:8]  
 
-```bash
-npm run reset-project
-```
+## Use Cases
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- Mentoring: Coaches or mentors log in alongside trainees to monitor workouts, suggest changes, and track progress together.[web:30]  
+- Co-op workouts: Friends share a session, each tracking their own sets and reps while viewing shared workout context.[web:30]  
+- Solo training: A single user logs workouts over time and uses historical data to adjust programs and goals.[web:7][web:10]  
