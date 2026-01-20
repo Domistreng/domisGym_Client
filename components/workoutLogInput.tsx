@@ -1,4 +1,6 @@
 //#region Headwork
+import * as Device from 'expo-device';
+import * as Notifications from 'expo-notifications';
 import React, { useContext, useEffect, useState } from 'react';
 import {
     Keyboard,
@@ -20,6 +22,13 @@ import { UserContext } from '../app/userContext';
 import InputRecentHistory from '../components/inputRecentHistory';
 
 
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,      // show banner/alert even in foreground
+    shouldPlaySound: true,      // play sound
+    shouldSetBadge: false,      // update app icon badge if you want
+  }),
+});
 
 interface WorkoutOption {
   label: string;
@@ -48,11 +57,59 @@ interface WorkoutLog {
 //#endregion
 
 const WorkoutLoginInput: React.FC = () => {
+    //#region alarms
+    async function registerForPushLikePermissions() {
+        if (!Device.isDevice) return;
+
+        const { status: existingStatus } = await Notifications.getPermissionsAsync();
+        let finalStatus = existingStatus;
+        if (existingStatus !== 'granted') {
+            const { status } = await Notifications.requestPermissionsAsync();
+            finalStatus = status;
+        }
+        if (finalStatus !== 'granted') {
+            throw new Error('Notification permission not granted');
+        }
+    }
+
+    async function startAlarm(durationSeconds: number) {
+        const seconds = durationSeconds;
+
+        const id = await Notifications.scheduleNotificationAsync({
+            content: {
+            title: "Alarm",
+            body: "Workout",
+            sound: 'default', // make sure proper sound is configured
+            },
+            trigger: {
+            type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+            seconds,
+            repeats: false,
+            channelId: Platform.OS === 'android' ? 'alarm' : undefined,
+            },
+        });
+
+        // Store `id` if you want to cancel later
+        return id;
+    }
+
+    async function cancelAlarm(alarmNotificationId: string | null) {
+        if (!alarmNotificationId) return;
+
+        await Notifications.cancelScheduledNotificationAsync(alarmNotificationId);
+    }
+    //#endregion
     //#region Definitions
     const { soloUser, duoUsers } = useContext(UserContext);
     const [open, setOpen] = useState(false);
     const [value, setValue] = useState<string | null>(null);
     const [items, setItems] = useState<WorkoutOption[]>([]);
+    const [timerA, setTimerA] = useState<number | 0>(-1);
+    const [timeStartA, setTimeStartA] = useState<number | 0>(-1)
+    const [alarmA, setAlarmA] = useState<string | null>(null);
+    const [timerB, setTimerB] = useState<number | 0>(-1);
+    const [timeStartB, setTimeStartB] = useState<number | 0>(-1)
+    const [alarmB, setAlarmB] = useState<string | null>(null);
 
     const [inputs1, setInputs1] = useState<WeightsReps>({
         WeightSet1: '',
@@ -73,6 +130,8 @@ const WorkoutLoginInput: React.FC = () => {
 
     const activeUser1 = duoUsers ? duoUsers[0] : soloUser;
     const activeUser2 = duoUsers ? duoUsers[1] : null;
+
+    const secondsBeforeWorkout = 5;
 
     // State for latest logs per user for selected workout
     const [latestLogUser1, setLatestLogUser1] = useState<WorkoutLog | null>(null);
@@ -97,6 +156,10 @@ const WorkoutLoginInput: React.FC = () => {
     }, [soloUser, duoUsers]);
 
     useEffect(() => {
+        registerForPushLikePermissions()
+    });
+
+    useEffect(() => {
         fetchLatestLogForUser(activeUser1?.UserID, value, setLatestLogUser1);
     }, [activeUser1, value]);
 
@@ -107,6 +170,29 @@ const WorkoutLoginInput: React.FC = () => {
             setLatestLogUser2(null);
         }
     }, [activeUser2, value]);
+
+    // timer A
+    useEffect(() => {
+        if (timerA === -1) return; // not running
+
+        const id = setInterval(() => {
+            setTimerA(Math.floor(Date.now() / 1000) - timeStartA);  // use functional update
+        }, 1000);
+
+        return () => clearInterval(id); // cleanup on timerA change/unmount
+    }, [timerA]);
+
+    // timer B
+    useEffect(() => {
+        if (timerB === -1) return;
+
+        const id = setInterval(() => {
+            setTimerB(Math.floor(Date.now() / 1000) - timeStartB);
+        }, 1000);
+
+        return () => clearInterval(id);
+    }, [timerB]);
+
     //#endregion
 
     //#region functions (related with API)
@@ -115,6 +201,9 @@ const WorkoutLoginInput: React.FC = () => {
     const handleSubmit = () => {
         if (!value) return alert('Please select a workout');
         if (!activeUser1) return alert('User not logged in');
+
+        setTimerA(-1);
+        setTimerB(-1);
 
         const allInputsBlank = (inputs: WeightsReps) =>
             !inputs.WeightSet1 &&
@@ -224,9 +313,23 @@ const WorkoutLoginInput: React.FC = () => {
         return isNaN(n) ? null : n;
     };
 
-    const handleChange = (userNumber: 1 | 2, field: keyof WeightsReps, val: string) => {
-        if (userNumber === 1) setInputs1((prev) => ({ ...prev, [field]: val }));
-        else setInputs2((prev) => ({ ...prev, [field]: val }));
+    const handleChange = async (userNumber: 1 | 2, field: keyof WeightsReps, val: string) => {
+        if (userNumber === 1) 
+        {
+            setInputs1((prev) => ({ ...prev, [field]: val }));
+            setTimerA(0)
+            setTimeStartA(Math.floor(Date.now() / 1000))
+            cancelAlarm(alarmA)
+            setAlarmA(await startAlarm(secondsBeforeWorkout))
+        }
+        else 
+        {
+            setInputs2((prev) => ({ ...prev, [field]: val }));
+            setTimerB(0)
+            setTimeStartB(Math.floor(Date.now() / 1000))
+            cancelAlarm(alarmB)
+            setAlarmB(await startAlarm(secondsBeforeWorkout))
+        }
     };
 
     // Function to copy WeightSet1 value into WeightSet2 and WeightSet3 for a user
@@ -382,7 +485,8 @@ const WorkoutLoginInput: React.FC = () => {
 
                         {activeUser1 && (
                             <>
-                                <Text style={styles.duoLabel}>{activeUser1.Username}</Text>
+                                {timerA != -1 && (<Text style={styles.duoLabel}>{activeUser1.Username} | {timerA}</Text>)}
+                                {timerA == -1 && (<Text style={styles.duoLabel}>{activeUser1.Username}</Text>)}
                                 {renderInputRow(1, 'Reps', ['RepsSet1', 'RepsSet2', 'RepsSet3'])}
                                 {renderInputRow(1, 'Weight (lbs)', ['WeightSet1', 'WeightSet2', 'WeightSet3'])}
                             </>
@@ -390,7 +494,8 @@ const WorkoutLoginInput: React.FC = () => {
 
                         {activeUser2 && (
                             <>
-                                <Text style={styles.duoLabel}>{activeUser2.Username}</Text>
+                                {timerB != -1 && (<Text style={styles.duoLabel}>{activeUser2.Username} | {timerB}</Text>)}
+                                {timerB == -1 && (<Text style={styles.duoLabel}>{activeUser2.Username}</Text>)}
                                 {renderInputRow(2, 'Reps', ['RepsSet1', 'RepsSet2', 'RepsSet3'])}
                                 {renderInputRow(2, 'Weight (lbs)', ['WeightSet1', 'WeightSet2', 'WeightSet3'])}
                             </>
