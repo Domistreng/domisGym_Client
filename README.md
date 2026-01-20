@@ -26,8 +26,8 @@ Domis Gym helps users track workouts in real time and securely stores all data i
 Clone the repository and install dependencies in your terminal:
 
 ```bash
-git clone https://github.com/your-username/domis-gym.git
-cd domis-gym
+git clone https://github.com/Domistreng/domisGym_Client
+cd domis-gym-client
 npm install
 # or
 yarn install
