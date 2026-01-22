@@ -131,7 +131,7 @@ const WorkoutLoginInput: React.FC = () => {
     const activeUser1 = duoUsers ? duoUsers[0] : soloUser;
     const activeUser2 = duoUsers ? duoUsers[1] : null;
 
-    const secondsBeforeWorkout = 5;
+    const secondsBeforeWorkout = 90;
 
     // State for latest logs per user for selected workout
     const [latestLogUser1, setLatestLogUser1] = useState<WorkoutLog | null>(null);
