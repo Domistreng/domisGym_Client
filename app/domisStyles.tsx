@@ -72,6 +72,13 @@ buttonDangerText: {
   fontSize: theme.fontSizes.normal,
 },
 
+textInput: {
+    height: 40,
+    margin: 12,
+    borderWidth: 1,
+    padding: 10,
+  },
+
 // DropDownPicker styles using theme colors
 dropDownContainer: {
   backgroundColor: theme.colors.background,
@@ -88,6 +95,7 @@ dropDownStyle: {
   backgroundColor: theme.colors.background,
   borderColor: theme.colors.border,
   borderRadius: theme.borderRadius,
+  
 },
 
 dropDownText: {
